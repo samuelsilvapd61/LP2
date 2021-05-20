@@ -10,6 +10,7 @@ public class Ellipse extends Figure {
     public Ellipse (int x, int y, int w, int h, Color contorno, Color fundo) {
     	super(x, y, w, h, contorno);
         this.fundo = fundo;
+        System.out.println("TESTE");
     }
 
     // Aqui e a pintura da elipse.
