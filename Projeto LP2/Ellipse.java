@@ -11,6 +11,9 @@ public class Ellipse extends Figure {
     	super(x, y, w, h, contorno);
         this.fundo = fundo;
         System.out.println("TESTE");
+        System.out.println("TESTE");
+        System.out.println("TESTE");
+        
     }
 
     // Aqui e a pintura da elipse.
@@ -21,6 +24,9 @@ public class Ellipse extends Figure {
         g2d.draw(new Ellipse2D.Double(this.x,this.y, this.w,this.h));
         g2d.setColor(fundo);
         g2d.fillOval(x, y, w, h);
+        System.out.println("TESTE");
+        System.out.println("TESTE");
+        System.out.println("TESTE");
 	}
     
 }
