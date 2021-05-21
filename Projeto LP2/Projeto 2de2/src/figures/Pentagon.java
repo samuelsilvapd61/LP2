@@ -3,17 +3,15 @@ package figures;
 import java.awt.*;
 
 public class Pentagon extends Figure {
-	public Color fundo;
 	private Polygon p = new Polygon();
 
 	// Construtor do pentagono.
 	// O pentagono foi um desafio em comparacao as outras figuras.
 	// Nao basta so dizer a posicao e tamanho do pentagono.
 	// O que realmente vai ser a referencia para desenhar o pentagono sao as posicoes dos 5 vertices.
-	// E isso que esta sendo calculado dentro do seu construtor
+	// E e isso que esta sendo calculado dentro do seu construtor.
 	public Pentagon (int x, int y, int w, int h, Color contorno, Color fundo) {
-		super(x, y, w, h, contorno);
-        this.fundo = fundo;
+		super(x, y, w, h, contorno, fundo);
         
         p.npoints = 4;
         p.xpoints[0] = (int) (x + w/2);
@@ -35,12 +33,16 @@ public class Pentagon extends Figure {
 
 	// Aqui e a pintura do pentagono.
 	@Override
-	public void paint(Graphics g) {
+	public void paint(Graphics g, boolean focado) {
 		Graphics2D g2d = (Graphics2D) g;
         g2d.setColor(contorno);
+        
+        Pentagon pContorno = new Pentagon(x-1, y-1, w+2, h+2, contorno, fundo);
+        g2d.drawPolygon(pContorno.p.xpoints, pContorno.p.ypoints, pContorno.p.npoints);
         g2d.drawPolygon(p.xpoints, p.ypoints, p.npoints);
         g2d.setColor(fundo);
         g2d.fillPolygon(p);
+        super.paint(g2d, focado);
 	}
 
 }

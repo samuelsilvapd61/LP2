@@ -2,10 +2,14 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
+import buttons.Botao;
+
 import java.util.ArrayList;
 import java.util.Random;
 
 import figures.*;
+
+import java.io.*;
 
 class ListApp {
     public static void main (String[] args) {
@@ -18,6 +22,8 @@ class ListFrame extends JFrame {
 	// Conjunto de variaveis necessarias
     ArrayList<Figure> figs = new ArrayList<Figure>();
     ArrayList<Rect> cores = new ArrayList<Rect>();
+    ArrayList<Botao> botoes = new ArrayList<Botao>();
+    Botao botaoFocus = null;
     Random rand = new Random();
     Point posMouse = null;
     Figure focus = null;
@@ -33,86 +39,140 @@ class ListFrame extends JFrame {
         this.setSize(700, 700);
         setLocationRelativeTo(null);
         
+        // Aqui acontece uma tentativa de abrir um arquivo ja existente com algum estado salvo do programa
+        // Se o arquivo nao existir, o programa inicia normalmente.
+        try {
+        	FileInputStream f = new FileInputStream("projeto.bin");
+        	ObjectInputStream o = new ObjectInputStream(f);
+        	this.figs = (ArrayList<Figure>) o.readObject();
+        	o.close();
+        } catch (Exception x) {
+        	System.out.println("Erro ao tentar abrir o arquivo!");
+        }
+        
+        // Aqui nos salvamos o estado atual da execucao do programa em um arquivo, 
+        // para que esse estado possa ser recuperado da proxima vez que o programa for executado.
         this.addWindowListener (
             new WindowAdapter() {
                 public void windowClosing (WindowEvent e) {
+                	try {
+                		FileOutputStream f = new FileOutputStream("projeto.bin");
+                		ObjectOutputStream o = new ObjectOutputStream(f);
+                		o.writeObject(figs);
+                		o.flush();
+                		o.close();
+                	} catch (Exception x) {
+                		System.out.println("Erro ao tentar gravar o arquivo!");
+                	}
+                	
                     System.exit(0);
                 }
             }
         );
         
+        //Inicializacao da lista de botoes
+        botoes.add(new Botao(1, new Line(20, 40, 35, 35, Color.black, Color.black)));
+        botoes.add(new Botao(2, new Rect(20, 85, 35, 35, Color.black, Color.black)));
+        botoes.add(new Botao(3, new Ellipse(20, 130, 35, 35, Color.black, Color.black)));
+        botoes.add(new Botao(4, new Pentagon(20, 175, 35, 35, Color.black, Color.black)));
+        
         
         // Daqui ate o final do construtor ListFrame() sao os codigos de manipulacao de figuras 
         
-        // Aqui sao as manipulacoes feitas a partir do clique do mouse
-        // Resumidamente, primeiro testamos se o clique foi na paleta de cores,
-        // se nao, testamos se o clique foi na bolinha que serve para alterar o tamanho de um desenho
-        // se nao, por fim testamos se o clique foi em alguma figura ou em um espaco vazio
+        // Aqui estao codigos do programa que sao executados a partir do clique do mouse.
         this.addMouseListener(new MouseAdapter() {
         	public void mousePressed (MouseEvent evt) {
         		posMouse = getMousePosition();
         		
-        		// Testando se o clique foi na paleta de cores, 
-        		// se sim, executa o que e necessario e ignora as outras possibilidades
-        		if (focus != null && (cores.get(0).x <= posMouse.x && posMouse.x <= (cores.get(21).x + cores.get(21).w)) &&
-        				(cores.get(0).y <= posMouse.y && posMouse.y <= (cores.get(21).y + cores.get(21).h))) {
-        			coresFocus = true;
-		        	bolinhaFocus = false;
-		        	figs.remove(focus);      			
-        			int i = 0;
-        			for (Rect cor: cores) {
-        		        if (cor.clicked(posMouse.x, posMouse.y)) {      		        	       		     
-        		        	// Aqui nos testamos se o clique foi na parte de cima da paleta, se sim, troca a cor de contorno
-        		        	// Se nao, entao foi na parte de baixo e troca a cor de fundo
-         		        	if (i <= 10) {                      
-                        		focus.contorno = cor.fundo;
-                        		figs.add(focus);	
-                        	} else {   
-                        		if (focus.getClass().getSimpleName().equals("Line")) {
-                        			focus.contorno = cor.fundo;                        			
-                        		} else if (focus.getClass().getSimpleName().equals("Rect")) {
-                        			Rect r  = new Rect(focus.x, focus.y, focus.w, focus.h, focus.contorno, cor.fundo);
-                        			focus = r;                        			
-                        		} else if (focus.getClass().getSimpleName().equals("Ellipse")) {
-                        			Ellipse e = new Ellipse(focus.x, focus.y, focus.w, focus.h, focus.contorno, cor.fundo);
-                        			focus = e;                        			
-                        		} else {
-                        			Pentagon p = new Pentagon(focus.x, focus.y, focus.w, focus.h, focus.contorno, cor.fundo);
-                        			focus = p;                       			
-                        		}                        		
-                        		figs.add(focus);
-                        	}
-         		        	repaint();
-                        	break;
-                        }
-                        i++;
-                    }
-        		// Aqui nos testamos se o clique foi na bolinha de foco.
-        		} else if (ellipseFocus.clicked(posMouse.x, posMouse.y)) {
-        			bolinhaFocus = true;
-        			coresFocus = false;
-      		
-            	// Por fim, se o clique nao foi na paleta de cores, nem na bolinha,
-            	// entao nos testamos se o clique foi em uma das figuras, ou em algum espaco vazio.
-            	// Se o clique foi numa figura, nos colocamos suas informacoes na variavel "focus",
-            	// se não, "focus" fica como null.
-                } else {
-                	bolinhaFocus = false;
+        		// Testando se o clique foi em algum dos botoes.
+        		if ((15 <= posMouse.x && posMouse.x <= 60) && (35 <= posMouse.y && posMouse.y <= 215)) {
+        			bolinhaFocus = false;
                 	coresFocus = false;
                 	focus = null;
-                	for (Figure fig: figs) {
-                        if (fig.clicked(posMouse.x, posMouse.y)) {                   
-                        	focus = fig;                              	
+        			for (Botao botao: botoes) {
+        				if (botao.clicked(posMouse.x, posMouse.y)) {
+        					botaoFocus = botao;
+        				}       				       				
+        			}
+        			repaint();
+        		} else {
+        			// Testando se o clique foi na paleta de cores.
+            		if (focus != null && (cores.get(0).x <= posMouse.x && posMouse.x <= (cores.get(21).x + cores.get(21).w)) &&
+            				(cores.get(0).y <= posMouse.y && posMouse.y <= (cores.get(21).y + cores.get(21).h))) {
+            			coresFocus = true;
+    		        	bolinhaFocus = false;
+    		        	figs.remove(focus);      			
+            			int i = 0;
+            			for (Rect cor: cores) {
+            		        if (cor.clicked(posMouse.x, posMouse.y)) {      		        	       		     
+            		        	// Aqui nos testamos se o clique foi na parte de cima da paleta, se sim, troca a cor de contorno.
+            		        	// Se nao, entao foi na parte de baixo, entao troca a cor de fundo.
+             		        	if (i <= 10) {                      
+                            		focus.contorno = cor.fundo;
+                            		figs.add(focus);	
+                            	} else {   
+                            		// Para trocar a cor de fundo, precisamos testar primeiro se a figura e uma linha,
+                            		// pois na pratica, a linha so tem 1 cor, e eu considerei que essa cor e a cor de fundo.
+                            		// Se nao for uma linha, usamos polimorfismo para trocar a cor de fundo da figura.
+                            		if (focus.getClass().getSimpleName().equals("Line")) {
+                            			focus.contorno = cor.fundo;                        			
+                            		} else {
+                            			focus.fundo = cor.fundo;
+                            		}                		
+                            		figs.add(focus);
+                            	}
+             		        	repaint();
+                            	break;
+                            }
+                            i++;
                         }
+            		// Aqui nos testamos se o clique foi na bolinha de foco.
+            		} else if (ellipseFocus.clicked(posMouse.x, posMouse.y)) {
+            			bolinhaFocus = true;
+            			coresFocus = false;
+                    } else {
+                    	bolinhaFocus = false;
+                    	coresFocus = false;
+                    	focus = null;
+                    	
+                    	// Aqui testamos se um dos botoes esta selecionado.
+                    	// Se sim, cria a figura na posicao onde for dado um clique.
+                    	if (botaoFocus != null) {
+                    		int idx = botaoFocus.idx;
+                    		if (idx == 1) {                  			
+                    			figs.add(new Line(posMouse.x, posMouse.y, 70, 0, Color.black, Color.white));                           
+                    		} else if (idx == 2) {
+                    			figs.add(new Rect(posMouse.x, posMouse.y, 70, 70, Color.black, Color.white));
+                    		} else if (idx == 3) {
+                    			figs.add(new Ellipse(posMouse.x, posMouse.y, 70, 70, Color.black, Color.white));
+                    		} else {
+                    			figs.add(new Pentagon(posMouse.x, posMouse.y, 70, 70, Color.black, Color.white));
+                    		}
+                    		focus = figs.get(figs.size()-1);
+                    		botaoFocus = null;
+                    		
+                    	// Por fim, testamos se o clique foi em alguma figura ja existente.
+                    	} else {
+                    		for (Figure fig: figs) {
+                                if (fig.clicked(posMouse.x, posMouse.y)) {                   
+                                	focus = fig;                              	
+                                }
+                            }
+                    	}
+                    	
+                    	// Se o clique foi numa figura, nos realocamos ela para o final da lista.
+                		if (focus != null) {
+                			figs.remove(focus);       	
+                        	figs.add(focus);
+                		} else {
+                			// Se nao foi numa figura, redefinimos a localizacao da bolinha de foco 
+                			// para uma posicao onde nao e possivel clicar.
+                			ellipseFocus.x = -10;
+                        	ellipseFocus.y = -10;
+                		}
+                		repaint();
                     }
-                	
-                	// Se o clique foi numa figura, nos realocamos ela para o final da lista.
-            		if (focus != null) {
-            			figs.remove(focus);       	
-                    	figs.add(focus);
-            		}
-            		repaint();
-                }
+        		}
         	}
 		});      
         
@@ -131,6 +191,10 @@ class ListFrame extends JFrame {
         			// O arrasto do mouse é igual a posicao nova do mouse menos a posicao antiga.
         			focus.w += posNovaMouse.x - posMouse.x;
         			focus.h += posNovaMouse.y - posMouse.y;
+        			
+        			// Aqui e necessario saber se a figura e um pentagono,
+        			// pois para alterar o tamanho de um pentagono e necessario instanciar ele, 
+        			// para que sejam feitos os calculos das posicoes dos 5 pontos.
         			if (focus.getClass().getSimpleName().equals("Pentagon")) {
             			Pentagon p = (Pentagon) focus;
             			focus = new Pentagon(focus.x, focus.y, focus.w, focus.h, focus.contorno, p.fundo);
@@ -147,7 +211,7 @@ class ListFrame extends JFrame {
         			// Primeiro verificamos se o clique NAO foi na paleta de cores.
         			if (!coresFocus) {
         				// Agora nos testamos se existe alguma figura focada.
-        				// Se sim nos itulizamos o arrasto do mouse para alterar a posicao da figura em questao.
+        				// Se sim nos utulizamos o arrasto do mouse para alterar a posicao da figura em questao.
         				if (focus != null) {             			        			
                     		figs.remove(focus);
                     		
@@ -155,6 +219,9 @@ class ListFrame extends JFrame {
                     		// O arrasto do mouse é igual a posicao nova do mouse menos a posicao antiga
                     		focus.drag(posNovaMouse.x - posMouse.x, posNovaMouse.y - posMouse.y);
                     		
+                    		// Aqui e necessario saber se a figura e um pentagono,
+                			// pois para movimentar um pentagono e necessario instanciar ele, 
+                			// para que sejam feitos os calculos das posicoes dos 5 pontos.
                     		if (focus.getClass().getSimpleName().equals("Pentagon")) {
                     			Pentagon p = (Pentagon) focus;
                     			focus = new Pentagon(focus.x, focus.y, focus.w, focus.h, focus.contorno, p.fundo);
@@ -173,7 +240,7 @@ class ListFrame extends JFrame {
 		});
         
         // Aqui nos criamos figuras novas ou removemos alguma que esteja focada
-        // a partir das teclas que foram pressionadas no teclado.
+        // a partir das teclas que forem pressionadas no teclado.
         this.addKeyListener(new KeyAdapter() {
         	public void keyPressed (KeyEvent evt) {
         		
@@ -196,7 +263,7 @@ class ListFrame extends JFrame {
                 // P para Pentagono.
                 // Delete para remover uma figura que esteja em foco.
                 if (evt.getKeyChar() == 'l') {
-                    figs.add(new Line(x, y, w, 0, contorno));
+                    figs.add(new Line(x, y, w, 0, contorno, fundo));
                     focus = figs.get(figs.size()-1);
                 } else if (evt.getKeyChar() == 'r') {
                 	figs.add(new Rect(x, y, w, h, contorno, fundo));
@@ -211,36 +278,45 @@ class ListFrame extends JFrame {
                 	figs.remove(focus);
                 	focus = null;
                 	rectFocus = null;
+                	// Apos remover uma figura, redefinimos a localizacao da bolinha de foco 
+        			// para uma posicao onde nao e possivel clicar.
+                	ellipseFocus.x = -10;
+                	ellipseFocus.y = -10;
                 }
                 repaint();
         	}
 		});
-
     }
 
-    // Aqui nos pintamos a janela desde o inicio sempre que essa funcao "repaint()" e chamada.
+    // Aqui nos pintamos a janela desde o inicio sempre que a funcao "repaint()" e chamada.
     public void paint (Graphics g) {
         super.paint(g);
         
-        // Aqui sao pintadas as figuras
+        // Aqui sao pintadas as figuras.
         for (Figure fig: this.figs) {
-            fig.paint(g);
+        	if (fig == focus) {
+        		fig.paint(g, true);
+        		
+        		// Aqui e atualizada a localizacao da bolinha de foco.
+        		ellipseFocus.x = focus.x + focus.w - 4;
+            	ellipseFocus.y = focus.y + focus.h - 4;
+        	} else {
+        		fig.paint(g, false);
+        	}
+        }
+        
+        // Aqui sao pintados os botoes
+        for (Botao botao: botoes) {
+        	botao.paint(g, botao == botaoFocus);
         }
         
         // Aqui nos testamos se existe alguma figura em foco.
-        // Se sim, nos pintamos o quadrado vermelho e a bolinha que indicam o foco de algum objeto.
-        // Tambem pintamos a paleta de cores.
-        if (focus != null) {
-        	rectFocus = new Rect(focus.x -4, focus.y -4, focus.w + 8, focus.h + 8, Color.red);
-        	rectFocus.paintFocus(g);
-        	ellipseFocus.x = rectFocus.x + rectFocus.w - 8;
-        	ellipseFocus.y = rectFocus.y + rectFocus.h - 8;
-        	ellipseFocus.paint(g);
-        	
+        // Se sim, pintamos a paleta de cores.
+        if (focus != null) {      	
         	// Aqui nos pintamos a paleta de cores.
         	criaListaCores(this);
         	for (Rect cor: cores) {
-                cor.paint(g);
+                cor.paint(g, false);
             }
         }
     }
