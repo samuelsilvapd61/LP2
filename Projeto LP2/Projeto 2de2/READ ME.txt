@@ -20,5 +20,5 @@ A fileira de cima sao as cores referentes ao contorno da figura.
 A fileira de baixo sao as cores referentes ao fundo da figura.
 
 Apos fechar o programa, um arquivo com nome "projeto.bin" fica salvo,
-armazenando o estado do da aplicacao antes de ter sido fechada.
+armazenando o estado da aplicacao antes de ter sido fechada.
 Ao abrir a aplicacao novamente, o estado salvo e carregado.
